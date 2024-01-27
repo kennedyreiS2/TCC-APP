@@ -1,54 +1,83 @@
-from ultralytics import YOLO
 import cv2
-import math
-# start webcam
+from ultralytics import YOLO
+import time
+import os
+import keyboard
+from src.tesseract_ocr import TesseractOCR
+from src.text2audio import Text2Audio
+
+# Load the YOLOv8 model
+model = YOLO('./src/runs/classify/train/weights/best.pt')
+
+# Set the save directory for images
+save_dir = './data/images'
+
+# Create the directory if it does not exist
+if not os.path.exists(save_dir):
+    os.makedirs(save_dir)
+
+# Open the video capture (webcam)
 cap = cv2.VideoCapture(0)
-cap.set(3, 640)
-cap.set(4, 480)
 
-# model
-model = YOLO('../runs/classify/train/weights/best.pt')
+# Check if the webcam is opened successfully
+if not cap.isOpened():
+    print("Error: Could not open webcam.")
+    exit()
 
-# object classes
-classNames = ["document","scene"]
+# Set the frame width and height
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
+# Variable to store the time of the last photo capture
+last_capture_time = time.time()
 
+# Loop through the video frames in real-time
 while True:
-    success, img = cap.read()
-    results = model(img, stream=True)
+    # Read a frame from the video
+    success, frame = cap.read()
 
-    # coordinates
-    for r in results:
-        boxes = r.boxes
+    if success:
+        # Display the frame
+        cv2.imshow("Webcam", frame)
 
-        for box in boxes:
-            # bounding box
-            x1, y1, x2, y2 = box.xyxy[0]
-            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2) # convert to int values
+        # Check if one minute has passed since the last photo capture
+        current_time = time.time()
+        if current_time - last_capture_time >= 10:
+            # Save the frame as an image
+            image_filename = f'{save_dir}/image_{int(current_time)}.jpg'
+            cv2.imwrite(image_filename, frame)
 
-            # put box in cam
-            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 3)
+            # Run YOLOv8 inference on the saved image
+            saved_image = cv2.imread(image_filename)
+            results = model(saved_image)
 
-            # confidence
-            confidence = math.ceil((box.conf[0]*100))/100
-            print("Confidence --->",confidence)
+            # Visualize the results on the frame
+            annotated_frame = results[0].plot()
 
-            # class name
-            cls = int(box.cls[0])
-            print("Class name -->", classNames[cls])
+            # Check if the image is classified as "document"
+            if results[0].names[0] == "document":
+                # Perform OCR using Tesseract on the saved image
+                ocr = TesseractOCR()
+                text = ocr.get_text(image_filename)
+                print("Text:", text)
+                if text:
+                    conv = Text2Audio()
+                    conv.text_to_audio(text=text)
 
-            # object details
-            org = [x1, y1]
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            fontScale = 1
-            color = (255, 0, 0)
-            thickness = 2
+            # Display the annotated frame
+            cv2.imshow("YOLOv8 Inference", annotated_frame)
 
-            cv2.putText(img, classNames[cls], org, font, fontScale, color, thickness)
+            # Update the last capture time
+            last_capture_time = current_time
 
-    cv2.imshow('Webcam', img)
-    if cv2.waitKey(1) == ord('q'):
+        # Check for the Ctrl + x key combination to exit the loop
+        if keyboard.is_pressed('ctrl') and keyboard.is_pressed('x'):
+            break
+
+    # Check for the 'q' key to exit the loop
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Release the video capture object and close the windows
 cap.release()
 cv2.destroyAllWindows()

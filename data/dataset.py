@@ -13,5 +13,10 @@ def download_dataset() -> None:
     project = rf.workspace(workspace).project(project)
     dataset = project.version(1).download("folder")
 
+    d = os.getcwd()
+    old = os.path.join(d, r"Classificacao-de-imagens-1/valid")
+    new = os.path.join(d, r"Classificacao-de-imagens-1/val")
+    os.rename(old, new)
+
 if __name__ == "__main__":
     download_dataset()

@@ -2,7 +2,7 @@
 env
 /data/Classificacao-de-imagens-1
 /src/yolov*
-/src/runs
+/src/runs*
 /data/images
 /data/audio
 /src/__pycache__

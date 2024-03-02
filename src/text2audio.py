@@ -10,6 +10,12 @@ class Text2Audio:
         """
         Converte texto em áudio e reproduz o áudio.
         """
+
+        audio_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'audio')
+
+        if not os.path.exists(audio_path):
+            os.makedirs(audio_path)
+
         output_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'audio', name_audio)
 
         tts = gtts.gTTS(text, lang=language)

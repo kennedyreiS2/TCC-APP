@@ -10,4 +10,6 @@ cd "$d"
 
 cd ./src
 
+rm -r ./runs
+
 python train.py

@@ -12,3 +12,6 @@ paddlepaddle==2.6.0
 paddleocr==2.7.0.3
 google-generativeai==0.3.2
 pygame==2.5.2
+transformers==4.36.2
+einops==0.7.0
+timm==0.9.16

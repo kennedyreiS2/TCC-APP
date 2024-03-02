@@ -9,3 +9,5 @@ env
 /notebooks/Project-Classification-Images-1
 /notebooks/yolov9
 /notebooks/PaddleOCR
+/src/audio
+/src/moondream

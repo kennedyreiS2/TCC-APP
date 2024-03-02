@@ -1,24 +1,31 @@
-import gtts
 import os
-from pathlib import Path
+import gtts
 import pygame
 
 class Text2Audio:
-    # Function to convert text to audio
+    """
+    Classe para converter texto em áudio.
+    """
     def text_to_audio(self, text='deu bom', name_audio='output.mp3', language='pt'):
-        output_directory = '/data/audio/'  # Diretório de saída
-        output_path = os.path.join(output_directory, name_audio)  # Caminho completo para o arquivo de saída
+        """
+        Converte texto em áudio e reproduz o áudio.
+        """
+        output_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'audio', name_audio)
 
-        # Verifica se o diretório de saída existe, se não, cria
-        if not os.path.exists(output_directory):
-            os.makedirs(output_directory)
+        tts = gtts.gTTS(text, lang=language)
+        tts.save(output_path)
 
-        # Inicializa o mixer do pygame
         pygame.mixer.init()
-        # Carrega o arquivo de áudio
         pygame.mixer.music.load(output_path)
-        # Reproduz o áudio
         pygame.mixer.music.play()
-        # Aguarda o término da reprodução
+
+        # Espera até que a música termine de tocar
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)
+
+        # Fecha a instância do pygame.mixer
+        pygame.mixer.quit()
+
+if __name__ == "__main__":
+    conv = Text2Audio()
+    conv.text_to_audio(text='Olá, mundo!', name_audio='hello_world.mp3')
